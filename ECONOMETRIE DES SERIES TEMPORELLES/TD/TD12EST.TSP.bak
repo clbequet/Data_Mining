@@ -1,0 +1,172 @@
+?XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+? PROGRAMME TD1-TD2 ECONOMETRIE DES SERIES TEMPORELLES                                      
+?XXXXXXXXXXXXXXXXX
+NAME MCE;
+FREQ Q;
+SMPL 1963:1 2021:1;
+
+TREND TIME;	
+?XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+?                               ***********************
+?                               * LECTURE DES DONNEES *
+?                               ***********************
+
+LOAD(FILE='Data1963-2021.XLS',format=EXCEL) ;
+SHOW series;
+?STOP;
+?XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+?                         ******************************
+?                         * CONSTRUCTION DES VARIABLES *
+?                         ******************************
+?          ATTENTION: NE RIEN MODIFIER DANS CETTE PARTIE
+?          *********************************************
+?GENR lsmic=log(smic);
+GENR LPqe = log(Pqe);
+GENR LQePqe = log(QePqe);
+GENR LPy = log(Py);
+GENR LPc = log(Pc);
+GENR LPin = log(Pinv);
+GENR LPm = log(Pm);
+GENR LPx = log(Px);
+GENR LYPy = log(YPy);
+GENR LCPc = log(CPc);
+GENR LINVP = log(INVP);
+GENR LMPm = log(MPm);
+GENR LXPx = log(XPx);
+GENR LW = log(W);
+GENR LH = log(H);
+GENR LN = log(L);
+GENR LGpg = log(Gpg);
+GENR lpg=log(pg);
+GENR lpdi=log(pdi);
+GENR lrd=log(rd);
+GENR ltcot=log(tcot);
+GENR LuPRES = log(1.0-TPRES/1000);
+GENR LuCoT = log(1.0-TCot/1000);
+GENR LCSU = LW + LN + LH - LYPy - LuCot;
+GENR LPyPm = LPy - LPm;
+GENR LPinPy = LPin - LPy;
+GENR LCTSRL = LW + LH - LuCot - LPY;
+GENR BC = Px*XPX - PM*MPM;
+GENR LNK = LN - log(K);
+GENR a = ypy/l;
+GENR LA = log(a);
+GENR lac=la-ltcot;
+GENR lwpc=lw-lpc;
+GENR lwtpy=lw+ltcot-lpy;
+GENR lwta=lw+ltcot-la;
+GENR LPxPqe = LPx - LPqe;
+
+?                       *************************************
+?                       * CALCUL DU COUT D'USAGE DU CAPITAL *
+?                       *************************************
+SMPL 1963:2 2021:1;
+GENR DLPY = LPY-lPY(-1);                                                        
+SMPL 1964:2 2021:1;
+GENR DT = .02 + .1*(.2*LPYPM + .4*LPYPM(-1) + .2*LPYPM(-2) + .1*LPYPM(-3)
+	  + .1*LPYPM(-4));
+SMPL 1963:1 64:1;
+GENR DT = DT(1964:2);
+SMPL 1964:2 2021:1;
+GENR PP = .2*DLPY + .4*DLPY(-1) + .2*DLPY(-2) + .1*DLPY(-3) + .1*DLPY(-4);
+SMPL 1963:1 1964:1;
+GENR PP = PP(1964:2);
+smpl 1963:1 2021:1;
+GENR LRPD = log(tr - 100*PP + 100*DT);
+GENR LVC = LPinPy + LRPD;
+GENR LWLVC = LW + LH - LuCot - LVC - LPY;
+smpl 1963:2 2021:1;
+GENR IK = INVP/K(-1);
+GENR lik=log(ik);
+?**************************************************
+smpl 1963:2 2021:1;
+GENR dlwtpy=lwtpy-lwtpy(-1);
+GENR dlnk=lnk-lnk(-1);
+GENR dlpy=log(py/py(-1));
+GENR dduc=duc-duc(-1);
+GENR dlcsu=lcsu-lcsu(-1);
+GENR dlypy=log(ypy/ypy(-1));
+GENR dlpinpy=lpinpy-lpinpy(-1);
+GENR dlrpd=lrpd-lrpd(-1);
+GENR dln=log(l/l(-1));
+GENR dlwlvc=lwlvc-lwlvc(-1);
+GENR dlh=log(h/h(-1));
+GENR dlvc=lvc-lvc(-1);
+GENR dlnk=lnk-lnk(-1);
+GENR dlcpc=log(cpc/cpc(-1));
+GENR dlrd=lrd-lrd(-1);
+GENR dlxpx=log(xpx/xpx(-1));
+GENR dlqepqe=log(qepqe/qepqe(-1));
+GENR dlpxpqe=lpxpqe-lpxpqe(-1);
+GENR dlmpm=log(mpm/mpm(-1));
+GENR dlpypm=lpypm-lpypm(-1);
+GENR dlpx=log(px/px(-1));
+GENR dlpqe=log(pqe/pqe(-1));
+GENR dlinvp=log(invp/invp(-1));
+GENR dlg=log(gpg/gpg(-1));
+GENR dtcho=tcho-tcho(-1);
+GENR dlwpc=lwpc-lwpc(-1);
+GENR dla=la-la(-1);
+GENR dlpc=lpc-lpc(-1);
+GENR dlpm=lpm-lpm(-1);
+GENR dlw=lw-lw(-1);
+GENR dtr=tr-tr(-1);
+GENR dlwta=lwta-lwta(-1);
+GENR dlpdi=lpdi-lpdi(-1);
+GENR dlac=lac-lac(-1);
+
+smpl 1963:3 2021:1;
+GENR ddlpy=dlpy-dlpy(-1);
+GENR dik=ik-ik(-1);
+GENR dlik=lik-lik(-1);
+
+?XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+?        ZONE DE TRAVAIL : MCE
+?XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+? EQUATION NON CONTRAINTE
+?------------------------
+SMPL 1964:2 2021:1;
+REGOPT(pvprint,stars) all;
+
+OLSQ dlcpc c lcpc(-1) lcpc(-2) lcpc(-3) lcpc(-4) lcpc(-5)
+             lrd lrd(-1) lrd(-2) lrd(-3) lrd(-4) lrd(-5)
+             tcho tcho(-1) tcho(-2) tcho(-3) tcho(-4) tcho(-5)
+             lpc lpc(-1) lpc(-2) lpc(-3) lpc(-4) lpc(-5);
+
+
+
+			 
+STOP;
+			 
+? EQUATION CONTRAINTE (APRES TRANSFORMATIONS)
+? -------------------------------------------
+SMPL 1964:2 2021:1;
+OLSQ dlcpc c lcpc(-1) lcpc(-2) lcpc(-3) lcpc(-4) lcpc(-5)
+             lrd lrd(-1) lrd(-2) lrd(-3) lrd(-4) lrd(-5)
+             tcho tcho(-1) tcho(-2) tcho(-3) tcho(-4) tcho(-5)
+             lpc lpc(-1) lpc(-2) lpc(-3) lpc(-4) lpc(-5);
+
+
+
+
+
+
+
+
+
+
+
+
+
+END;
+
+
+
+
+
+
+
+
+
+
